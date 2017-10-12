@@ -40,7 +40,7 @@ final class RightPress_Updates_8746370
      */
 
     // Version number
-    private static $rightpress_updates_version = '1.5';
+    private static $rightpress_updates_version = '1.6';
 
     // Object properties
     private $endpoint_url;
@@ -86,9 +86,6 @@ final class RightPress_Updates_8746370
         $this->plugin_key       = $this->get_plugin_key();
         $this->purchase_code    = $this->get_purchase_code();
 
-        // Force WordPress to check for updates on plugin activation
-        register_activation_hook($plugin_path, array($this, 'on_activation'));
-
         // Register plugin with WordPress updater
         add_filter('pre_set_site_transient_update_plugins', array($this, 'register_plugin'));
 
@@ -108,19 +105,6 @@ final class RightPress_Updates_8746370
 
         // Some code needs to be executed later
         add_action('init', array($this, 'on_wp_init'), 1);
-    }
-
-    /**
-     * Force WordPress to check for updates on activation
-     *
-     * @access public
-     * @return void
-     */
-    public function on_activation()
-    {
-        if (!get_option('rightpress_up_pc_' . $this->plugin_key) && !get_option('rightpress_up_nag_' . $this->plugin_key)) {
-            set_site_transient('update_plugins', null);
-        }
     }
 
     /**
@@ -155,12 +139,8 @@ final class RightPress_Updates_8746370
      */
     public function register_plugin($transient)
     {
-        if (empty($transient->checked)) {
-            return $transient;
-        }
-
         // Get current version
-        if (is_array($transient->checked) && isset($transient->checked[$this->plugin_basename])) {
+        if (!empty($transient->checked) && is_array($transient->checked) && isset($transient->checked[$this->plugin_basename])) {
             $current_version = $transient->checked[$this->plugin_basename];
         }
         else if (!empty($this->plugin_version)) {
@@ -514,7 +494,7 @@ final class RightPress_Updates_8746370
             $content .= '</form>';
 
             // Notes
-            $content .= '<div><small><a href="http://url.rightpress.net/purchase-code-help">' . __('Where do I find my Purchase Code?', 'rightpress-updates') . '</a>&nbsp;&nbsp;&nbsp;<a href="' . self::url_with_vars(array('rightpress_nag_dismiss' => 'up', 'rightpress_plugin_slug' => $this->plugin_slug, 'rightpress_nag_version' => $nag_version)) . '">' . __('Hide This Notice', 'rightpress-updates') . '</a></small></div>';
+            $content .= '<div><small><a href="http://url.rightpress.net/purchase-code-help">' . __('Where do I find my Purchase Code?', 'rightpress-updates') . '</a>&nbsp;&nbsp;&nbsp;<a href="' . add_query_arg(array('rightpress_nag_dismiss' => 'up', 'rightpress_plugin_slug' => $this->plugin_slug, 'rightpress_nag_version' => $nag_version)) . '">' . __('Hide This Notice', 'rightpress-updates') . '</a></small></div>';
         }
         // Custom nag
         else {
@@ -529,7 +509,7 @@ final class RightPress_Updates_8746370
             }
 
             // Content may ask for plugin name and nag dismiss url
-            $content = sprintf($content, $this->get_plugin_name(), self::url_with_vars(array('rightpress_nag_dismiss' => $context, 'rightpress_plugin_slug' => $this->plugin_slug, 'rightpress_nag_version' => $nag_version)));
+            $content = sprintf($content, $this->get_plugin_name(), add_query_arg(array('rightpress_nag_dismiss' => $context, 'rightpress_plugin_slug' => $this->plugin_slug, 'rightpress_nag_version' => $nag_version)));
         }
 
         // Print nag
@@ -560,7 +540,7 @@ final class RightPress_Updates_8746370
         }
 
         // Get original page url
-        $redirect_url = self::url_without_vars(array('rightpress_nag_dismiss', 'rightpress_plugin_slug', 'rightpress_nag_version'));
+        $redirect_url = remove_query_arg(array('rightpress_nag_dismiss', 'rightpress_plugin_slug', 'rightpress_nag_version'));
 
         // Redirect user and exit
         wp_redirect($redirect_url);
@@ -609,7 +589,7 @@ final class RightPress_Updates_8746370
                 $this->update_purchase_code($purchase_code);
 
                 // Redirect user so that RightPress Updates is loaded with new config
-                wp_redirect(self::current_url());
+                wp_redirect(add_query_arg(array('rightpress_purchase_code_saved' => '1')));
                 exit;
             }
         }
@@ -739,121 +719,6 @@ final class RightPress_Updates_8746370
     public static function get_version_key($version)
     {
         return str_replace('.', '_', $version);
-    }
-
-    /**
-     * Retrieve URL with additional query variables
-     *
-     * @access public
-     * @param array $input
-     * @param string $url
-     * @return string
-     */
-    public static function url_with_vars($input, $url = null)
-    {
-        return self::current_url('add', $url, $input);
-    }
-
-    /**
-     * Retrieve URL without specified query variables
-     *
-     * @access public
-     * @param array $input
-     * @return string
-     */
-    public static function url_without_vars($input, $url = null)
-    {
-        return self::current_url('remove', $url, $input);
-    }
-
-    /**
-     * Returns current URL
-     * Adds or removes query variables if passed in arguments
-     *
-     * @access public
-     * @param string $action
-     * @param string $url
-     * @param array $input
-     * @return string
-     */
-    public static function current_url($action = 'add', $url = null, $input = array())
-    {
-        // Get URL
-        if ($url === null) {
-            $url_origin = self::get_request_url_origin();
-            $url = $url_origin . $_SERVER['REQUEST_URI'];
-        }
-        else {
-            $url_origin = untrailingslashit(preg_replace('/\?.*/', '', $url));
-        }
-
-        // Do not modify URL of no input is given
-        if (empty($input) || !is_array($input)) {
-            return $url;
-        }
-
-        // Parse URL
-        $parsed = parse_url($url);
-
-        // Get all query variables
-        if (!empty($parsed['query'])) {
-            parse_str($parsed['query'], $vars);
-        }
-        else {
-            $vars = array();
-        }
-
-        // Proceed depending on action
-        if ($action === 'add') {
-
-            // Merge vars arrays
-            $vars = array_merge($vars, $input);
-        }
-        else if ($action === 'remove') {
-
-            // Iterate over keys and unset query vars
-            if (is_array($input)) {
-                foreach ($input as $key) {
-                    if (isset($vars[$key])) {
-                        unset($vars[$key]);
-                    }
-                }
-            }
-        }
-
-        // Make query string
-        $query_string = http_build_query($vars);
-
-        // Start building URL
-        $url = $url_origin . $parsed['path'];
-
-        // Add query string
-        if (!empty($query_string)) {
-            $url .= '?' . $query_string;
-        }
-
-        // Return URL
-        return $url;
-    }
-
-    /**
-     * Get URL origin of current request
-     * Note: This function does not support fancy stuff like user/pass
-     *
-     * @access public
-     * @return string
-     */
-    public static function get_request_url_origin()
-    {
-        $s          = $_SERVER;
-        $ssl        = (!empty($s['HTTPS']) && $s['HTTPS'] == 'on');
-        $sp         = strtolower($s['SERVER_PROTOCOL']);
-        $protocol   = substr($sp, 0, strpos($sp, '/')) . (($ssl) ? 's' : '');
-        $port       = $s['SERVER_PORT'];
-        $port       = ((!$ssl && $port == '80') || ($ssl && $port == '443')) ? '' : ':' . $port;
-        $host       = isset($s['HTTP_X_FORWARDED_HOST']) ? $s['HTTP_X_FORWARDED_HOST'] : (isset($s['HTTP_HOST']) ? $s['HTTP_HOST'] : null);
-        $host       = isset($host) ? $host : $s['SERVER_NAME'] . $port;
-        return $protocol . '://' . $host;
     }
 
     /**

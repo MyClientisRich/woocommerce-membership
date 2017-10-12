@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
  *
  * WARNING: Make sure to update version number here as well as in the main class name
  */
-$version = '9';
+$version = '16';
 
 global $rightpress_wc_meta_version;
 
@@ -51,9 +51,9 @@ final class RightPress_WC_Meta
 /**
  * Main Class
  */
-if (!class_exists('RightPress_WC_Meta_9')) {
+if (!class_exists('RightPress_WC_Meta_16')) {
 
-final class RightPress_WC_Meta_9
+final class RightPress_WC_Meta_16
 {
 
     /**
@@ -541,6 +541,32 @@ final class RightPress_WC_Meta_9
         else {
             delete_post_meta($product, $key);
         }
+    }
+
+    /**
+     * Normalize meta array
+     *
+     * Turns WC 3.0 style meta data (containing objects) to regular WP post meta format
+     * Unwraps meta in all WC versions
+     *
+     * @access public
+     * @param array $meta_data
+     * @return array
+     */
+    public static function normalize_meta_data($meta_data)
+    {
+        if (RightPress_Helper::wc_version_gte('3.0')) {
+
+            $normalized = array();
+
+            foreach ($meta_data as $meta) {
+                $normalized[$meta->key][] = $meta->value;
+            }
+
+            $meta_data = $normalized;
+        }
+
+        return RightPress_Helper::unwrap_post_meta($meta_data);
     }
 
 

@@ -82,9 +82,11 @@ class WooCommerce_Membership_Product
         $product = wc_get_product($product_id);
 
         // Iterate over plan ids
-        foreach (RightPress_WC_Legacy::product_get_meta($product, '_rpwcm_plans', false) as $plan_id) {
-            if (RightPress_Helper::post_is_active($plan_id)) {
-                $ids[] = $plan_id;
+        if (is_a($product, 'WC_Product')) {
+            foreach (RightPress_WC_Legacy::product_get_meta($product, '_rpwcm_plans', false) as $plan_id) {
+                if (RightPress_Helper::post_is_active($plan_id)) {
+                    $ids[] = $plan_id;
+                }
             }
         }
 
@@ -122,7 +124,7 @@ class WooCommerce_Membership_Product
             $child_product = wc_get_product($child_id);
 
             // Check for flag in meta
-            if (RightPress_WC_Legacy::product_get_meta($child_product, '_rpwcm')) {
+            if (is_a($child_product, 'WC_Product') && RightPress_WC_Legacy::product_get_meta($child_product, '_rpwcm')) {
                 return true;
             }
         }
@@ -143,6 +145,11 @@ class WooCommerce_Membership_Product
         // Load product object if needed
         if (!is_object($product)) {
             $product = wc_get_product($product);
+        }
+
+        // Check if product was loaded
+        if (!is_a($product, 'WC_Product')) {
+            return;
         }
 
         // Get plans for this product
@@ -172,7 +179,7 @@ class WooCommerce_Membership_Product
         $product = wc_get_product($product_id);
 
         // Check if product was loaded
-        if (!$product) {
+        if (!is_a($product, 'WC_Product')) {
             return;
         }
 
@@ -195,7 +202,7 @@ class WooCommerce_Membership_Product
                     $child_product = wc_get_product($variation_id);
 
                     // Check flag
-                    if (RightPress_WC_Legacy::product_get_meta($child_product, '_rpwcm')) {
+                    if (is_a($child_product, 'WC_Product') && RightPress_WC_Legacy::product_get_meta($child_product, '_rpwcm')) {
                         $has_other_membership_variations = true;
                         break;
                     }
@@ -251,6 +258,11 @@ class WooCommerce_Membership_Product
         // Load product
         $product = wc_get_product($post_id);
 
+        // Check if product was loaded
+        if (!is_a($product, 'WC_Product')) {
+            return;
+        }
+
         // Retrieve currently selected plans
         $selected = RightPress_WC_Legacy::product_get_meta($product, '_rpwcm_plans', false);
 
@@ -297,6 +309,11 @@ class WooCommerce_Membership_Product
         // Load product
         $product = wc_get_product($post_id);
 
+        // Check if product was loaded
+        if (!is_a($product, 'WC_Product')) {
+            return;
+        }
+
         // Retrieve currently selected plans
         $selected = RightPress_WC_Legacy::product_get_meta($product, '_rpwcm_plans', false);
 
@@ -337,6 +354,11 @@ class WooCommerce_Membership_Product
 
         // Load product
         $product = wc_get_product($post_id);
+
+        // Check if product was loaded
+        if (!is_a($product, 'WC_Product')) {
+            return;
+        }
 
         // Get previously set plans
         $old_plans = RightPress_WC_Legacy::product_get_meta($product, '_rpwcm_plans', false);

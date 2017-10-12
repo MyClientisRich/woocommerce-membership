@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WooCommerce Membership\n"
-"POT-Creation-Date: 2017-04-20 17:24+0300\n"
+"POT-Creation-Date: 2017-10-12 09:20+0300\n"
 "PO-Revision-Date: 2016-02-22 12:01+0300\n"
 "Last-Translator: \n"
 "Language-Team: RightPress <info@rightpress.net>\n"
@@ -118,87 +118,6 @@ msgstr ""
 msgid "Multipart"
 msgstr ""
 
-#: ../includes/classes/libraries/rightpress-updates.class.php:266
-#: ../includes/classes/libraries/rightpress-updates.class.php:274
-msgid "An unexpected error occurred."
-msgstr ""
-
-#: ../includes/classes/libraries/rightpress-updates.class.php:484
-msgid "Automatic Update Setup"
-msgstr ""
-
-#: ../includes/classes/libraries/rightpress-updates.class.php:488
-#, php-format
-msgid ""
-"There is a new version of <strong>%s</strong> available. To enable automatic "
-"updates, enter your CodeCanyon Purchase Code below."
-msgstr ""
-
-#: ../includes/classes/libraries/rightpress-updates.class.php:491
-#, php-format
-msgid ""
-"<strong>%s</strong> supports automatic updates. To receive them, enter your "
-"CodeCanyon Purchase Code below."
-msgstr ""
-
-#: ../includes/classes/libraries/rightpress-updates.class.php:505
-#: ../includes/classes/libraries/rightpress-updates.class.php:897
-msgid "Purchase Code"
-msgstr ""
-
-#: ../includes/classes/libraries/rightpress-updates.class.php:511
-#: ../includes/views/backend/plan/actions.php:29
-#: ../includes/views/backend/users/bulk_grant_access.php:42
-msgid "Submit"
-msgstr ""
-
-#: ../includes/classes/libraries/rightpress-updates.class.php:517
-msgid "Where do I find my Purchase Code?"
-msgstr ""
-
-#: ../includes/classes/libraries/rightpress-updates.class.php:517
-msgid "Hide This Notice"
-msgstr ""
-
-#: ../includes/classes/libraries/rightpress-updates.class.php:587
-msgid "Purchase Code format is invalid."
-msgstr ""
-
-#: ../includes/classes/libraries/rightpress-updates.class.php:595
-#: ../includes/classes/libraries/rightpress-updates.class.php:958
-msgid "Unable to verify Purchase Code right now. Please try again later."
-msgstr ""
-
-#: ../includes/classes/libraries/rightpress-updates.class.php:599
-#: ../includes/classes/libraries/rightpress-updates.class.php:946
-msgid "Purchase Code is not valid."
-msgstr ""
-
-#: ../includes/classes/libraries/rightpress-updates.class.php:603
-#: ../includes/classes/libraries/rightpress-updates.class.php:952
-msgid "Purchase Code belongs to another product."
-msgstr ""
-
-#: ../includes/classes/libraries/rightpress-updates.class.php:911
-msgid "View and change your Envato Purchase Code."
-msgstr ""
-
-#: ../includes/classes/libraries/rightpress-updates.class.php:938
-msgid "Purchase Code has been successfully updated."
-msgstr ""
-
-#: ../includes/classes/libraries/rightpress-updates.class.php:942
-msgid "Purchase Code has been successfully reset."
-msgstr ""
-
-#: ../includes/classes/libraries/rightpress-updates.class.php:946
-msgid "Please fix it and try again."
-msgstr ""
-
-#: ../includes/classes/libraries/rightpress-updates.class.php:952
-msgid "Please change it and try again."
-msgstr ""
-
 #: ../includes/classes/woocommerce-membership-form-builder.class.php:433
 msgid "required"
 msgstr ""
@@ -258,9 +177,9 @@ msgid "No Plans Found In Trash"
 msgstr ""
 
 #: ../includes/classes/woocommerce-membership-plan.class.php:126
-#: ../includes/classes/woocommerce-membership-product.class.php:230
-#: ../includes/classes/woocommerce-membership-product.class.php:280
-#: ../includes/classes/woocommerce-membership-product.class.php:489
+#: ../includes/classes/woocommerce-membership-product.class.php:237
+#: ../includes/classes/woocommerce-membership-product.class.php:292
+#: ../includes/classes/woocommerce-membership-product.class.php:511
 msgid "Membership"
 msgstr ""
 
@@ -282,7 +201,7 @@ msgstr ""
 #: ../includes/classes/woocommerce-membership-plan.class.php:301
 #: ../includes/classes/woocommerce-membership-user.class.php:369
 #: ../includes/views/backend/plan/members.php:55
-#: ../woocommerce-membership.php:778
+#: ../woocommerce-membership.php:783
 msgid "Never"
 msgstr ""
 
@@ -459,23 +378,23 @@ msgstr ""
 msgid "Access is restricted to users without specific membership plans only"
 msgstr ""
 
-#: ../includes/classes/woocommerce-membership-product.class.php:231
+#: ../includes/classes/woocommerce-membership-product.class.php:238
 msgid "This product grants access to one or more membership plans."
 msgstr ""
 
-#: ../includes/classes/woocommerce-membership-product.class.php:280
+#: ../includes/classes/woocommerce-membership-product.class.php:292
 msgid "This variation grants access to one or more membership plans."
 msgstr ""
 
-#: ../includes/classes/woocommerce-membership-product.class.php:489
+#: ../includes/classes/woocommerce-membership-product.class.php:511
 msgid "Membership Product"
 msgstr ""
 
-#: ../includes/classes/woocommerce-membership-product.class.php:516
+#: ../includes/classes/woocommerce-membership-product.class.php:538
 msgid "This product is a membership"
 msgstr ""
 
-#: ../includes/classes/woocommerce-membership-product.class.php:516
+#: ../includes/classes/woocommerce-membership-product.class.php:538
 msgid "Contains at least one membership"
 msgstr ""
 
@@ -731,8 +650,14 @@ msgstr ""
 msgid "Move to Trash"
 msgstr ""
 
+#: ../includes/views/backend/plan/actions.php:29
+#: ../includes/views/backend/users/bulk_grant_access.php:42
+#: ../rightpress/rightpress-updates.class.php:491
+msgid "Submit"
+msgstr ""
+
 #: ../includes/views/backend/plan/details.php:22
-#: ../woocommerce-membership.php:814
+#: ../woocommerce-membership.php:819
 msgid "name not set"
 msgstr ""
 
@@ -741,7 +666,7 @@ msgid "Key:"
 msgstr ""
 
 #: ../includes/views/backend/plan/details.php:29
-#: ../woocommerce-membership.php:815
+#: ../woocommerce-membership.php:820
 msgid "key not set"
 msgstr ""
 
@@ -822,11 +747,11 @@ msgstr ""
 msgid "Expiration Term"
 msgstr ""
 
-#: ../includes/views/backend/plan/products.php:60
+#: ../includes/views/backend/plan/products.php:62
 msgid "None"
 msgstr ""
 
-#: ../includes/views/backend/plan/products.php:72
+#: ../includes/views/backend/plan/products.php:76
 msgid "No related products found."
 msgstr ""
 
@@ -957,6 +882,90 @@ msgstr ""
 msgid "Expiration Date"
 msgstr ""
 
+#: ../rightpress/rightpress-conditions-helper.class.php:466
+#, php-format
+msgid "Any %s"
+msgstr ""
+
+#: ../rightpress/rightpress-helper.class.php:2969
+msgid "Standard Rate"
+msgstr ""
+
+#: ../rightpress/rightpress-updates.class.php:246
+#: ../rightpress/rightpress-updates.class.php:254
+msgid "An unexpected error occurred."
+msgstr ""
+
+#: ../rightpress/rightpress-updates.class.php:464
+msgid "Automatic Update Setup"
+msgstr ""
+
+#: ../rightpress/rightpress-updates.class.php:468
+#, php-format
+msgid ""
+"There is a new version of <strong>%s</strong> available. To enable automatic "
+"updates, enter your CodeCanyon Purchase Code below."
+msgstr ""
+
+#: ../rightpress/rightpress-updates.class.php:471
+#, php-format
+msgid ""
+"<strong>%s</strong> supports automatic updates. To receive them, enter your "
+"CodeCanyon Purchase Code below."
+msgstr ""
+
+#: ../rightpress/rightpress-updates.class.php:485
+#: ../rightpress/rightpress-updates.class.php:762
+msgid "Purchase Code"
+msgstr ""
+
+#: ../rightpress/rightpress-updates.class.php:497
+msgid "Where do I find my Purchase Code?"
+msgstr ""
+
+#: ../rightpress/rightpress-updates.class.php:497
+msgid "Hide This Notice"
+msgstr ""
+
+#: ../rightpress/rightpress-updates.class.php:567
+msgid "Purchase Code format is invalid."
+msgstr ""
+
+#: ../rightpress/rightpress-updates.class.php:575
+#: ../rightpress/rightpress-updates.class.php:823
+msgid "Unable to verify Purchase Code right now. Please try again later."
+msgstr ""
+
+#: ../rightpress/rightpress-updates.class.php:579
+#: ../rightpress/rightpress-updates.class.php:811
+msgid "Purchase Code is not valid."
+msgstr ""
+
+#: ../rightpress/rightpress-updates.class.php:583
+#: ../rightpress/rightpress-updates.class.php:817
+msgid "Purchase Code belongs to another product."
+msgstr ""
+
+#: ../rightpress/rightpress-updates.class.php:776
+msgid "View and change your Envato Purchase Code."
+msgstr ""
+
+#: ../rightpress/rightpress-updates.class.php:803
+msgid "Purchase Code has been successfully updated."
+msgstr ""
+
+#: ../rightpress/rightpress-updates.class.php:807
+msgid "Purchase Code has been successfully reset."
+msgstr ""
+
+#: ../rightpress/rightpress-updates.class.php:811
+msgid "Please fix it and try again."
+msgstr ""
+
+#: ../rightpress/rightpress-updates.class.php:817
+msgid "Please change it and try again."
+msgstr ""
+
 #: ../templates/emails/customer-membership-expiration-reminder.php:16
 #: ../templates/emails/plain/customer-membership-expiration-reminder.php:14
 #, php-format
@@ -975,154 +984,154 @@ msgstr ""
 msgid "Your membership %s on %s has been granted."
 msgstr ""
 
-#: ../woocommerce-membership.php:161
+#: ../woocommerce-membership.php:166
 msgid "Support"
 msgstr ""
 
-#: ../woocommerce-membership.php:166 ../woocommerce-membership.php:314
-#: ../woocommerce-membership.php:315
+#: ../woocommerce-membership.php:171 ../woocommerce-membership.php:319
+#: ../woocommerce-membership.php:320
 msgid "Settings"
 msgstr ""
 
-#: ../woocommerce-membership.php:324 ../woocommerce-membership.php:325
+#: ../woocommerce-membership.php:329 ../woocommerce-membership.php:330
 msgid "Bulk Grant Access"
 msgstr ""
 
-#: ../woocommerce-membership.php:510
+#: ../woocommerce-membership.php:515
 msgid "URL must be filled in."
 msgstr ""
 
-#: ../woocommerce-membership.php:518
+#: ../woocommerce-membership.php:523
 msgid "Method must be selected."
 msgstr ""
 
-#: ../woocommerce-membership.php:527
+#: ../woocommerce-membership.php:532
 msgid ""
 "At least one plan must be selected for methods Members With Plans and Users "
 "Without Plans."
 msgstr ""
 
-#: ../woocommerce-membership.php:548
+#: ../woocommerce-membership.php:553
 msgid "Misconfigured rules were discarded."
 msgstr ""
 
-#: ../woocommerce-membership.php:652
+#: ../woocommerce-membership.php:657
 msgid "Your settings have been saved."
 msgstr ""
 
-#: ../woocommerce-membership.php:658
+#: ../woocommerce-membership.php:663
 msgid "Reverted to a previous value."
 msgstr ""
 
-#: ../woocommerce-membership.php:661
+#: ../woocommerce-membership.php:666
 msgid "must be numeric"
 msgstr ""
 
-#: ../woocommerce-membership.php:662
+#: ../woocommerce-membership.php:667
 msgid "must be either 0 or 1"
 msgstr ""
 
-#: ../woocommerce-membership.php:663
+#: ../woocommerce-membership.php:668
 msgid "is not allowed"
 msgstr ""
 
-#: ../woocommerce-membership.php:664
+#: ../woocommerce-membership.php:669
 msgid "is not a valid email address"
 msgstr ""
 
-#: ../woocommerce-membership.php:665
+#: ../woocommerce-membership.php:670
 msgid "is not a valid URL"
 msgstr ""
 
-#: ../woocommerce-membership.php:666
+#: ../woocommerce-membership.php:671
 msgid "is not a valid text string"
 msgstr ""
 
-#: ../woocommerce-membership.php:672
+#: ../woocommerce-membership.php:677
 msgid "Value of"
 msgstr ""
 
-#: ../woocommerce-membership.php:779
+#: ../woocommerce-membership.php:784
 msgid "Close"
 msgstr ""
 
-#: ../woocommerce-membership.php:816
+#: ../woocommerce-membership.php:821
 msgid "Membership product"
 msgstr ""
 
-#: ../woocommerce-membership.php:817
+#: ../woocommerce-membership.php:822
 msgid "Select Plans"
 msgstr ""
 
-#: ../woocommerce-membership.php:818
+#: ../woocommerce-membership.php:823
 msgid "Select Plan"
 msgstr ""
 
-#: ../woocommerce-membership.php:819
+#: ../woocommerce-membership.php:824
 msgid "Select User"
 msgstr ""
 
-#: ../woocommerce-membership.php:973
+#: ../woocommerce-membership.php:978
 msgid "day"
 msgid_plural "days"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../woocommerce-membership.php:976
+#: ../woocommerce-membership.php:981
 msgid "week"
 msgid_plural "weeks"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../woocommerce-membership.php:979
+#: ../woocommerce-membership.php:984
 msgid "month"
 msgid_plural "months"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../woocommerce-membership.php:982
+#: ../woocommerce-membership.php:987
 msgid "year"
 msgid_plural "years"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../woocommerce-membership.php:1150
+#: ../woocommerce-membership.php:1155
 #, php-format
 msgid ""
 "<strong>WooCommerce Membership</strong> requires PHP %s or later. Please "
 "update PHP on your server to use this plugin."
 msgstr ""
 
-#: ../woocommerce-membership.php:1150 ../woocommerce-membership.php:1161
-#: ../woocommerce-membership.php:1172 ../woocommerce-membership.php:1183
+#: ../woocommerce-membership.php:1155 ../woocommerce-membership.php:1166
+#: ../woocommerce-membership.php:1177 ../woocommerce-membership.php:1188
 #, php-format
 msgid "If you have any questions, please contact %s."
 msgstr ""
 
-#: ../woocommerce-membership.php:1150 ../woocommerce-membership.php:1161
-#: ../woocommerce-membership.php:1172 ../woocommerce-membership.php:1183
+#: ../woocommerce-membership.php:1155 ../woocommerce-membership.php:1166
+#: ../woocommerce-membership.php:1177 ../woocommerce-membership.php:1188
 msgid "RightPress Support"
 msgstr ""
 
-#: ../woocommerce-membership.php:1161
+#: ../woocommerce-membership.php:1166
 #, php-format
 msgid ""
 "<strong>WooCommerce Membership</strong> requires WordPress version %s or "
 "later. Please update WordPress to use this plugin."
 msgstr ""
 
-#: ../woocommerce-membership.php:1172
+#: ../woocommerce-membership.php:1177
 #, php-format
 msgid ""
 "<strong>WooCommerce Membership</strong> requires WooCommerce to be active. "
 "You can download WooCommerce %s."
 msgstr ""
 
-#: ../woocommerce-membership.php:1172
+#: ../woocommerce-membership.php:1177
 msgid "here"
 msgstr ""
 
-#: ../woocommerce-membership.php:1183
+#: ../woocommerce-membership.php:1188
 #, php-format
 msgid ""
 "<strong>WooCommerce Membership</strong> requires WooCommerce version %s or "

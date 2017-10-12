@@ -25,43 +25,47 @@ if (!defined('ABSPATH')) {
 
         <tbody>
             <?php foreach($products as $product_id => $product): ?>
-                <tr>
-                    <td class="rpwcm_fourth_width rpwcm_membership_plan_item_list_product">
-                        <?php // WC31: Products will no longer be posts ?>
-                        <?php RightPress_Helper::print_link_to_post($product['main_id'], $product['title']); ?>
-                    </td>
-                    <td class="rpwcm_fourth_width rpwcm_membership_plan_item_list_type">
-                        <?php echo $product['type']; ?>
-                    </td>
-                    <td class="rpwcm_fourth_width rpwcm_membership_plan_item_list_since">
-                        <?php $product = wc_get_product($product_id); ?>
-                        <?php if ($product): ?>
-                            <?php echo wc_price($product->get_price()); ?>
-                        <?php endif; ?>
-                    </td>
-                    <td class="rpwcm_fourth_width rpwcm_membership_plan_item_list_expires">
-                        <?php
-                            $expiration_value = RightPress_WC_Legacy::product_get_meta($product, '_rpwcm_expiration_value', true);
-                            $expiration_unit  = RightPress_WC_Legacy::product_get_meta($product, '_rpwcm_expiration_unit', true);
+                <?php if (is_a(wc_get_product($product_id), 'WC_Product')): ?>
 
-                            if (!empty($expiration_value) && !empty($expiration_unit)) {
-                                $time_units = WooCommerce_Membership::get_time_units();
+                    <tr>
+                        <td class="rpwcm_fourth_width rpwcm_membership_plan_item_list_product">
+                            <?php // WC31: Products will no longer be posts ?>
+                            <?php RightPress_Helper::print_link_to_post($product['main_id'], $product['title']); ?>
+                        </td>
+                        <td class="rpwcm_fourth_width rpwcm_membership_plan_item_list_type">
+                            <?php echo $product['type']; ?>
+                        </td>
+                        <td class="rpwcm_fourth_width rpwcm_membership_plan_item_list_since">
+                            <?php $product = wc_get_product($product_id); ?>
+                            <?php if ($product): ?>
+                                <?php echo wc_price($product->get_price()); ?>
+                            <?php endif; ?>
+                        </td>
+                        <td class="rpwcm_fourth_width rpwcm_membership_plan_item_list_expires">
+                            <?php
+                                $expiration_value = RightPress_WC_Legacy::product_get_meta($product, '_rpwcm_expiration_value', true);
+                                $expiration_unit  = RightPress_WC_Legacy::product_get_meta($product, '_rpwcm_expiration_unit', true);
 
-                                echo $expiration_value . ' ';
+                                if (!empty($expiration_value) && !empty($expiration_unit)) {
+                                    $time_units = WooCommerce_Membership::get_time_units();
 
-                                if (isset($time_units[$expiration_unit])) {
-                                    echo call_user_func($time_units[$expiration_unit]['translation_callback'], $expiration_unit, $expiration_value);
+                                    echo $expiration_value . ' ';
+
+                                    if (isset($time_units[$expiration_unit])) {
+                                        echo call_user_func($time_units[$expiration_unit]['translation_callback'], $expiration_unit, $expiration_value);
+                                    }
+                                    else {
+                                        echo $expiration_unit;
+                                    }
                                 }
                                 else {
-                                    echo $expiration_unit;
+                                    echo '<span class="rpwcm_nothing_to_display">' . __('None', 'woocommerce-membership') . '</span>';
                                 }
-                            }
-                            else {
-                                echo '<span class="rpwcm_nothing_to_display">' . __('None', 'woocommerce-membership') . '</span>';
-                            }
-                        ?>
-                    </td>
-                </tr>
+                            ?>
+                        </td>
+                    </tr>
+
+                <?php endif; ?>
             <?php endforeach; ?>
         </tbody>
     </table>

@@ -157,7 +157,7 @@ class WooCommerce_Membership_Order
                 $product = wc_get_product($id);
 
                 // Allow other plugins to cancel membership activation
-                if (!apply_filters('woocommerce_membership_cancel_activation', false, $order_id, $item_id, $item, $id)) {
+                if (is_a($product, 'WC_Product') && !apply_filters('woocommerce_membership_cancel_activation', false, $order_id, $item_id, $item, $id)) {
 
                     // Schedule expiration
                     $expiration_value = RightPress_WC_Legacy::product_get_meta($product, '_rpwcm_expiration_value', true);

@@ -29,13 +29,14 @@
 }
 .rpwcm_settings_container h2,
 .rpwcm_settings_container h3 {
-    padding: 10px 0 10px 15px;
+    padding: 20px;
     border-top: 1px solid #dfdfdf;
     border-bottom: 1px solid #dfdfdf;
     background-color: #f9f9f9;
     margin: 0;
 }
-.rpwcm_settings_container .form-table {
+.woocommerce .rpwcm_settings_container table.form-table,
+.rpwcm_settings_container table.form-table {
     margin: 10px 0 10px 25px;
     width: auto;
 }

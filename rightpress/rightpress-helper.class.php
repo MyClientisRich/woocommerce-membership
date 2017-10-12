@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
  *
  * WARNING: Make sure to update version number here as well as in the main class name
  */
-$version = '9';
+$version = '16';
 
 global $rightpress_helper_version;
 
@@ -51,9 +51,9 @@ final class RightPress_Helper
 /**
  * Main Class
  */
-if (!class_exists('RightPress_Helper_9')) {
+if (!class_exists('RightPress_Helper_16')) {
 
-final class RightPress_Helper_9
+final class RightPress_Helper_16
 {
 
     /**
@@ -64,16 +64,17 @@ final class RightPress_Helper_9
      * @param string $plugin_path
      * @param string $plugin_name
      * @param array $args
-     * @return string
+     * @param string $custom_path
+     * @return void
      */
-    public static function include_template($template, $plugin_path, $plugin_name, $args = array())
+    public static function include_template($template, $plugin_path, $plugin_name, $args = array(), $custom_path = null)
     {
         if ($args && is_array($args)) {
             extract($args);
         }
 
         // Get template path
-        $template_path = self::get_template_path($template, $plugin_path, $plugin_name);
+        $template_path = self::get_template_path($template, $plugin_path, $plugin_name, $custom_path);
 
         // Check if template exists
 	if (!file_exists($template_path)) {
@@ -88,21 +89,39 @@ final class RightPress_Helper_9
     }
 
     /**
+     * Include extension template
+     *
+     * @access public
+     * @param string $extension_key
+     * @param string $template
+     * @param string $plugin_path
+     * @param string $plugin_name
+     * @param array $args
+     * @return void
+     */
+    public static function include_extension_template($extension_key, $template, $plugin_path, $plugin_name, $args = array())
+    {
+        $custom_path = 'extensions/' . $extension_key . '/';
+        RightPress_Helper::include_template($template, $plugin_path, $plugin_name, $args, $custom_path);
+    }
+
+    /**
      * Select correct template (allow overrides in theme folder)
      *
      * @access public
      * @param string $template
      * @param string $plugin_path
      * @param string $plugin_name
+     * @param string $custom_path
      * @return string
      */
-    public static function get_template_path($template, $plugin_path, $plugin_name)
+    public static function get_template_path($template, $plugin_path, $plugin_name, $custom_path = null)
     {
         $template = rtrim($template, '.php') . '.php';
 
         // Check if this template exists in current theme
-        if (!($template_path = locate_template(array($plugin_name . '/' . $template)))) {
-            $template_path = $plugin_path . 'templates/' . $template;
+        if (!($template_path = locate_template(array($plugin_name . '/' . $custom_path . $template)))) {
+            $template_path = $plugin_path . $custom_path . 'templates/' . $template;
         }
 
         return $template_path;
@@ -171,7 +190,7 @@ final class RightPress_Helper_9
      */
     public static function string_contains_phrase($string, $phrase)
     {
-        return preg_match('/.*(^|\s|#)' . preg_quote($phrase) . '.*/i', $string) === 1 ? true : false;
+        return preg_match('/.*(^|\s|#|[^A-Za-z0-9])' . preg_quote($phrase) . '.*/i', $string) === 1 ? true : false;
     }
 
     /**
@@ -412,8 +431,6 @@ final class RightPress_Helper_9
     /**
      * Unwrap array elements from get_post_meta moves all [0] elements one level higher
      *
-     * TBD: do we need to apply this when loading from WC 3.0 meta stores?
-     *
      * @access public
      * @param array $input
      * @return array
@@ -551,7 +568,11 @@ final class RightPress_Helper_9
      */
     public static function shorten_text($text, $max_chars)
     {
-        return substr($text, 0, $max_chars) . '...';
+        if (strlen($text) > ($max_chars + 3)) {
+            return substr($text, 0, $max_chars) . '...';
+        }
+
+        return $text;
     }
 
     /**
@@ -908,6 +929,9 @@ final class RightPress_Helper_9
     /**
      * Get date time object from date format and value
      *
+     * Does not accept timestamps as there are issues with timezones then,
+     * use get_datetime_object() when timestamp is available
+     *
      * @access public
      * @param string $format
      * @param string $value
@@ -1001,9 +1025,16 @@ final class RightPress_Helper_9
             $date = '@' . $date;
         }
 
-        $date_time = new DateTime($date);
+        // Get datetime object with correct timezone
+        $date_time = new DateTime();
         $time_zone = self::get_time_zone();
         $date_time->setTimezone($time_zone);
+
+        // Set date if passed in
+        if ($date !== null) {
+            $date_time->modify($date);
+        }
+
         return $date_time;
     }
 
@@ -1113,6 +1144,191 @@ final class RightPress_Helper_9
     }
 
     /**
+     * Check if value represents field that is checked
+     *
+     * @access public
+     * @param array|string $value
+     * @return bool
+     */
+    public static function is_checked($value)
+    {
+        if (gettype($value) === 'array') {
+
+            // All elements need to match for this to be valid
+            foreach ($value as $single_value) {
+                if (!$single_value) {
+                    return false;
+                }
+            }
+
+            // If we reached this point, each array element is checked
+            return true;
+        }
+        else if ($value) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if value equals string
+     *
+     * Designed to work with meta data conditions
+     *
+     * @access public
+     * @param array|string $value
+     * @param string $string
+     * @return bool
+     */
+    public static function equals($value, $string)
+    {
+        if (gettype($value) === 'array') {
+
+            // All elements need to match for this to be valid
+            foreach ($value as $single_value) {
+                if ($single_value !== $string) {
+                    return false;
+                }
+            }
+
+            // If we reached this point, each array element matches string
+            return true;
+        }
+        else {
+            return ($value === $string);
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if value contains string
+     *
+     * Designed to work with meta data conditions
+     *
+     * @access public
+     * @param array|string $value
+     * @param string $string
+     * @return bool
+     */
+    public static function contains($value, $string)
+    {
+        if (gettype($value) === 'array') {
+            return in_array($string, $value, true);
+        }
+        else {
+            return (strpos($value, $string) !== false);
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if value begins with string
+     *
+     * Designed to work with meta data conditions
+     *
+     * @access public
+     * @param array|string $value
+     * @param string $string
+     * @return bool
+     */
+    public static function begins_with($value, $string)
+    {
+        if (gettype($value) === 'array') {
+            $first = array_shift($value);
+            return $first === $string;
+        }
+        else {
+            return RightPress_Helper::string_begins_with_substring($value, $string);
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if value ends with string
+     *
+     * Designed to work with meta data conditions
+     *
+     * @access public
+     * @param array|string $value
+     * @param string $string
+     * @return bool
+     */
+    public static function ends_with($value, $string)
+    {
+        if (gettype($value) === 'array') {
+            $last = array_pop($value);
+            return $last === $string;
+        }
+        else {
+            return RightPress_Helper::string_ends_with_substring($value, $string);
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if value is more than number
+     *
+     * @access public
+     * @param mixed $value
+     * @param string $number
+     * @return bool
+     */
+    public static function more_than($value, $number)
+    {
+        if (gettype($value) === 'array') {
+
+            // All elements need to match for this to be valid
+            foreach ($value as $single_value) {
+                if ($single_value <= $number) {
+                    return false;
+                }
+            }
+
+            // If we reached this point, each array element is bigger than number
+            return true;
+        }
+        else {
+            return ($value > $number);
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if value is less than number
+     *
+     * @access public
+     * @param mixed $value
+     * @param string $number
+     * @return bool
+     */
+    public static function less_than($value, $number)
+    {
+        if (gettype($value) === 'array') {
+
+            // All elements need to match for this to be valid
+            foreach ($value as $single_value) {
+                if ($single_value >= $number) {
+                    return false;
+                }
+            }
+
+            // If we reached this point, each array element is smaller than number
+            return true;
+        }
+        else {
+            return ($value < $number);
+        }
+
+        return false;
+    }
+
+    /**
      * Check if current page is backend user edit page
      *
      * @access public
@@ -1187,11 +1403,43 @@ final class RightPress_Helper_9
      *
      * @access public
      * @param float $amount
+     * @param array $plugins
      * @param string $to_currency
      * @param string $from_currency
      * @return float
      */
-    public static function get_amount_in_currency($amount, $to_currency = null, $from_currency = null)
+    public static function get_amount_in_currency($amount, $plugins = null, $to_currency = null, $from_currency = null)
+    {
+        // Iterate over list of supported plugins
+        foreach (array('aelia', 'realmag777') as $plugin) {
+
+            // Check if this plugin needs to be used
+            if (!is_array($plugins) || in_array($plugin, $plugins, true)) {
+
+                // Convert amount
+                $method = 'get_amount_in_currency_' . $plugin;
+                $amount = RightPress_Helper::$method($amount, $to_currency, $from_currency);
+            }
+        }
+
+        // Return possibly converted amount
+        return $amount;
+    }
+
+    /**
+     * Support for Aelia currency switcher extension
+     *
+     * This is only supposed to be used for fees or fixed discounts set in config
+     * of our own extensions - do not apply this to any prices set in WooCommerce
+     * as currency switcher extensions are already converting those prices
+     *
+     * @access public
+     * @param float $amount
+     * @param string $to_currency
+     * @param string $from_currency
+     * @return float
+     */
+    public static function get_amount_in_currency_aelia($amount, $to_currency = null, $from_currency = null)
     {
         // Get from currency
         $from_currency = $from_currency ?: get_option('woocommerce_currency');
@@ -1203,6 +1451,25 @@ final class RightPress_Helper_9
         // https://aelia.co/shop/currency-switcher-woocommerce/
         $amount = apply_filters('wc_aelia_cs_convert', $amount, $from_currency, $to_currency);
 
+        // Return possibly converted amount
+        return (float) $amount;
+    }
+
+    /**
+     * Support for RealMag777 currency switcher extension
+     *
+     * This is only supposed to be used for fees or fixed discounts set in config
+     * of our own extensions - do not apply this to any prices set in WooCommerce
+     * as currency switcher extensions are already converting those prices
+     *
+     * @access public
+     * @param float $amount
+     * @param string $to_currency
+     * @param string $from_currency
+     * @return float
+     */
+    public static function get_amount_in_currency_realmag777($amount, $to_currency = null, $from_currency = null)
+    {
         // WooCommerce Currency Switcher by RealMag777
         // https://wordpress.org/plugins/woocommerce-currency-switcher/
         // https://codecanyon.net/item/woocommerce-currency-switcher/8085217
@@ -1210,6 +1477,41 @@ final class RightPress_Helper_9
 
         // Return possibly converted amount
         return (float) $amount;
+    }
+
+    /**
+     * Get order total in base currency
+     *
+     * Support for Aelia and RealMag777 currency switcher extensions
+     *
+     * @access public
+     * @param mixed $order
+     * @return float|bool
+     */
+    public static function get_wc_order_total_in_base_currency($order)
+    {
+        // Load order object
+        if (!is_a($order, 'WC_Order')) {
+            $order = RightPress_Helper::wc_get_order($order);
+        }
+
+        // RealMag777 currency switcher support
+        if ($order_base_currency = RightPress_WC_Meta::order_get_meta($order, '_woocs_order_base_currency', true)) {
+            if ($order_base_currency !== RightPress_WC_Legacy::order_get_currency($order)) {
+                if ($currency_rate = RightPress_WC_Meta::order_get_meta($order, '_woocs_order_rate', true)) {
+                    return (float) (RightPress_WC_Legacy::order_get_total($order) / $currency_rate);
+                }
+            }
+        }
+
+        // Aelia currency switcher support
+        if ($order_total = RightPress_WC_Meta::order_get_meta($order, '_order_total_base_currency', true)) {
+            return (float) $order_total;
+        }
+
+        // Currency was not changed for this order (or unsupported currency
+        // switcher extension was used)
+        return false;
     }
 
     /**
@@ -1534,7 +1836,7 @@ final class RightPress_Helper_9
 
                     // Check if this term has been selected
                     foreach ($selected as $attribute_key => $selected_term_slug) {
-                        if (RightPress_Helper::string_ends_with_substring($attribute_key, $term->taxonomy) && $selected_term_slug === $term->slug) {
+                        if (RightPress_Helper::string_ends_with_substring($attribute_key, $term->taxonomy) && ($selected_term_slug === $term->slug || $selected_term_slug === '')) {
                             $attribute_ids[] = $term->term_id;
                         }
                     }
@@ -1579,7 +1881,7 @@ final class RightPress_Helper_9
 
                 // Check terms
                 if ($terms && !is_wp_error($terms)) {
-                    $attribute_ids = array_unique(array_merge($attribute_ids, $terms));
+                    $attribute_ids = array_merge($attribute_ids, $terms);
                 }
             }
             // Attribute is used for variations
@@ -1601,7 +1903,7 @@ final class RightPress_Helper_9
             }
         }
 
-        return $attribute_ids;
+        return array_unique($attribute_ids);
     }
 
     /**
@@ -1685,14 +1987,23 @@ final class RightPress_Helper_9
      * Get WooCommerce cart subtotal
      *
      * @access public
+     * @param bool $include_tax
      * @return float
      */
-    public static function get_wc_cart_subtotal()
+    public static function get_wc_cart_subtotal($include_tax = true)
     {
         global $woocommerce;
 
-        if (is_object($woocommerce) && isset($woocommerce->cart) && is_object($woocommerce->cart) && isset($woocommerce->cart->subtotal)) {
-            return $woocommerce->cart->subtotal;
+        if (is_object($woocommerce) && isset($woocommerce->cart) && is_object($woocommerce->cart)) {
+
+            // Including tax
+            if ($include_tax && isset($woocommerce->cart->subtotal)) {
+                return $woocommerce->cart->subtotal;
+            }
+            // Excluding tax
+            else if (isset($woocommerce->cart->subtotal_ex_tax)) {
+                return $woocommerce->cart->subtotal_ex_tax;
+            }
         }
 
         return 0;
@@ -1702,17 +2013,29 @@ final class RightPress_Helper_9
      * Get WooCommerce cart contents weight
      *
      * @access public
+     * @param array $cart_items
      * @return float
      */
-    public static function get_wc_cart_contents_weight()
+    public static function get_wc_cart_contents_weight($cart_items = null)
     {
         global $woocommerce;
 
-        if (is_object($woocommerce) && isset($woocommerce->cart) && is_object($woocommerce->cart) && isset($woocommerce->cart->cart_contents_weight)) {
-            return $woocommerce->cart->cart_contents_weight;
+        $weight = 0.0;
+
+        // Get cart items
+        if ($cart_items === null && is_object($woocommerce) && isset($woocommerce->cart) && is_object($woocommerce->cart) && isset($woocommerce->cart->cart_contents)) {
+            $cart_items = $woocommerce->cart->cart_contents;
         }
 
-        return 0;
+        // Iterate over cart items
+        if (is_array($cart_items) && !empty($cart_items)) {
+            foreach ($cart_items as $cart_item) {
+                $weight += (float) $cart_item['data']->get_weight() * $cart_item['quantity'];
+            }
+        }
+
+        // Return cart weight
+        return $weight;
     }
 
     /**
@@ -1745,53 +2068,431 @@ final class RightPress_Helper_9
      * Get sum of WooCommerce cart item quantities
      *
      * @access public
+     * @param array $cart_items
+     * @param array $params
      * @return int
      */
-    public static function get_wc_cart_sum_of_item_quantities()
+    public static function get_wc_cart_sum_of_item_quantities($cart_items = null, $params = array())
     {
         global $woocommerce;
 
-        if (is_object($woocommerce) && isset($woocommerce->cart) && is_object($woocommerce->cart) && isset($woocommerce->cart->cart_contents_count)) {
-            return $woocommerce->cart->cart_contents_count;
+        $sum = 0;
+
+        // Get cart items
+        if ($cart_items === null && is_object($woocommerce) && isset($woocommerce->cart) && is_object($woocommerce->cart) && isset($woocommerce->cart->cart_contents)) {
+            $cart_items = $woocommerce->cart->cart_contents;
         }
 
-        return 0;
+        // Check if we have any items
+        if (is_array($cart_items) && !empty($cart_items)) {
+
+            // Optionally filter cart items
+            if (!empty($params)) {
+                $cart_items = RightPress_Helper::wc_filter_cart_items($cart_items, $params);
+            }
+
+            // Add all quantities
+            foreach ($cart_items as $cart_item) {
+                $sum += $cart_item['quantity'];
+            }
+        }
+
+        // Return sum of quantities
+        return $sum;
+    }
+
+    /**
+     * Get sum of WooCommerce cart item subtotals
+     *
+     * @access public
+     * @param array $params
+     * @param bool $include_tax
+     * @return float
+     */
+    public static function get_wc_cart_sum_of_item_subtotals($params = array(), $include_tax = true)
+    {
+        global $woocommerce;
+
+        $sum = 0.0;
+
+        // Check cart
+        if (is_object($woocommerce) && isset($woocommerce->cart) && is_object($woocommerce->cart)) {
+
+            // Include all cart items
+            if (empty($params)) {
+                $sum = RightPress_Helper::get_wc_cart_subtotal($include_tax);
+            }
+            // Filter cart items
+            else {
+
+                // Get cart items
+                $cart_items = $woocommerce->cart->cart_contents;
+
+                // Filter cart items
+                $cart_items = RightPress_Helper::wc_filter_cart_items($cart_items, $params);
+
+                // Iterate over cart items
+                foreach ($cart_items as $cart_item) {
+
+                    // Add subtotal
+                    $sum += $cart_item['line_subtotal'];
+
+                    // Add subtotal tax
+                    if ($include_tax) {
+                        $sum += $cart_item['line_subtotal_tax'];
+                    }
+                }
+            }
+        }
+
+        return $sum;
+    }
+
+    /**
+     * Get sum of WooCommerce order item quantities
+     *
+     * @access public
+     * @param array $order_items
+     * @param array $params
+     * @return int
+     */
+    public static function get_wc_order_sum_of_item_quantities($order_items, $params = array())
+    {
+        $sum = 0;
+
+        // Check if we have any items
+        if (is_array($order_items) && !empty($order_items)) {
+
+            // Optionally filter order items
+            if (!empty($params)) {
+                $order_items = RightPress_Helper::wc_filter_order_items($order_items, $params);
+            }
+
+            // Add all quantities
+            foreach ($order_items as $order_item) {
+                $sum += RightPress_WC_Legacy::order_item_get_quantity($order_item);
+            }
+        }
+
+        // Return sum of quantities
+        return $sum;
+    }
+
+    /**
+     * Get sum of WooCommerce order item values
+     *
+     * @access public
+     * @param array $order_items
+     * @param array $params
+     * @param bool $include_tax
+     * @return float
+     */
+    public static function get_wc_order_sum_of_item_values($order_items, $params = array(), $include_tax = true)
+    {
+        $sum = 0.0;
+
+        // Check if we have any items
+        if (is_array($order_items) && !empty($order_items)) {
+
+            // Optionally filter order items
+            if (!empty($params)) {
+                $order_items = RightPress_Helper::wc_filter_order_items($order_items, $params);
+            }
+
+            // Add all values
+            foreach ($order_items as $order_item) {
+
+                // Add subtotal
+                $sum += RightPress_WC_Legacy::order_item_get_subtotal($order_item);
+
+                // Add subtotal tax
+                if ($include_tax) {
+                    $sum += RightPress_WC_Legacy::order_item_get_subtotal_tax($order_item);
+                }
+            }
+        }
+
+        return $sum;
+    }
+
+    /**
+     * Filter WooCommerce cart items
+     *
+     * @access public
+     * @param array $cart_items
+     * @param array $params
+     * @return array
+     */
+    public static function wc_filter_cart_items($cart_items, $params)
+    {
+        $items = array();
+
+        // Prepare items
+        foreach ($cart_items as $cart_item_key => $cart_item) {
+
+            $items[$cart_item_key] = array(
+                'product_id'    => !empty($cart_item['product_id']) ? (string) $cart_item['product_id'] : null,
+                'variation_id'  => !empty($cart_item['variation_id']) ? (string) $cart_item['variation_id'] : null,
+                'attribute_ids' => RightPress_Helper::get_wc_product_attribute_ids_from_cart_item($cart_item),
+            );
+        }
+
+        // Filter items
+        $items = RightPress_Helper::wc_filter_items($items, $params);
+
+        // Filter cart items by remaining items
+        $cart_items = array_intersect_key($cart_items, $items);
+
+        // Return filtered cart items array
+        return $cart_items;
+    }
+
+    /**
+     * Filter WooCommerce order items
+     *
+     * @access public
+     * @param array $order_items
+     * @param array $params
+     * @return array
+     */
+    public static function wc_filter_order_items($order_items, $params)
+    {
+        $items = array();
+
+        // Prepare items
+        foreach ($order_items as $order_item_key => $order_item) {
+
+            // Get product id
+            $product_id     = RightPress_WC_Legacy::order_item_get_product_id($order_item);
+            $variation_id   = RightPress_WC_Legacy::order_item_get_variation_id($order_item);
+
+            // Get attributes
+            $attribute_ids = array();
+
+            if (!empty($product_id) && !empty($variation_id)) {
+
+                // Get selected variation attributes
+                $selected = array();
+
+                // Load variation
+                $variation = wc_get_product($variation_id);
+
+                // Get variation attributes
+                $attributes = $variation->get_variation_attributes();
+
+                // Get selected attributes
+                foreach ($attributes as $attribute_key => $attribute_value) {
+
+                    // Value is set
+                    if ($attribute_value !== '') {
+                        $selected[$attribute_key] = $attribute_value;
+                    }
+                    // Search for value
+                    else {
+                        $selected[$attribute_key] = RightPress_WC_Legacy::order_item_get_meta($order_item, str_replace('attribute_', '', $attribute_key), true, 'edit');
+                    }
+                }
+
+                // Get attribute ids
+                $attribute_ids = RightPress_Helper::get_wc_product_attribute_ids($product_id, $selected);
+            }
+
+            // Fill items array
+            $items[$order_item_key] = array(
+                'product_id'    => !empty($product_id) ? (string) $product_id : null,
+                'variation_id'  => !empty($variation_id) ? (string) $variation_id : null,
+                'attribute_ids' => $attribute_ids,
+            );
+        }
+
+        // Filter items
+        $items = RightPress_Helper::wc_filter_items($items, $params);
+
+        // Filter order items by remaining items
+        $order_items = array_intersect_key($order_items, $items);
+
+        // Return filtered order items array
+        return $order_items;
+    }
+
+    /**
+     * Filter WooCommerce items
+     *
+     * Accepts array of arrays with the following structure
+     * - key
+     *   - product_id
+     *   - variation_id
+     *   - attribute_ids
+     *
+     * Params accepts one or more of the following properties:
+     * - products               array of product ids
+     * - product_variations     array of product variation ids
+     * - product_categories     array of product category ids
+     * - product_attributes     array or product attribute ids
+     * - product_tags           array of product tag ids
+     *
+     * @access public
+     * @param array $items
+     * @param array $params
+     * @return array
+     */
+    public static function wc_filter_items($items, $params)
+    {
+        $filtered = array();
+
+        // Iterate over items
+        foreach ($items as $item_key => $item) {
+
+            // Products
+            if (!empty($params['products'])) {
+                if (empty($item['product_id']) || !in_array($item['product_id'], $params['products'], true)) {
+                    continue;
+                }
+            }
+
+            // Product variations
+            if (!empty($params['product_variations'])) {
+                if (empty($item['variation_id']) || !in_array($item['variation_id'], $params['product_variations'], true)) {
+                    continue;
+                }
+            }
+
+            // Product categories
+            if (!empty($params['product_categories'])) {
+
+                // No product id
+                if (empty($item['product_id'])) {
+                    continue;
+                }
+
+                // Get item category ids
+                $item_category_ids = RightPress_Helper::get_wc_product_category_ids_from_product_ids(array($item['product_id']));
+                $item_category_ids = array_map('strval', $item_category_ids);
+
+                // Get condition category ids with children
+                $condition_category_ids = array();
+
+                foreach ($params['product_categories'] as $category_id) {
+                    $condition_category_ids = array_merge($condition_category_ids, RightPress_Helper::get_term_with_children($category_id, 'product_cat'));
+                }
+
+                $condition_category_ids = array_map('strval', $condition_category_ids);
+
+                // Get matching category ids
+                $matching_category_ids = array_intersect($item_category_ids, $condition_category_ids);
+
+                // Check if at least one category id is matching
+                if (empty($matching_category_ids)) {
+                    continue;
+                }
+            }
+
+            // Product attributes
+            if (!empty($params['product_attributes'])) {
+
+                // Get item attribute ids
+                $item_attribute_ids = array_map('strval', $item['attribute_ids']);
+
+                // Get matching attribute ids
+                $matching_attribute_ids = array_intersect($item_attribute_ids, $params['product_attributes']);
+
+                // Check if at least one attribute id is matching
+                if (empty($matching_attribute_ids)) {
+                    continue;
+                }
+            }
+
+            // Product tags
+            if (!empty($params['product_tags'])) {
+
+                // No product id
+                if (empty($item['product_id'])) {
+                    continue;
+                }
+
+                // Get item tag ids
+                $item_tag_ids = RightPress_Helper::get_wc_product_tag_ids_from_product_ids(array($item['product_id']));
+                $item_tag_ids = array_map('strval', $item_tag_ids);
+
+                // Get matching tag ids
+                $matching_tag_ids = array_intersect($item_tag_ids, $params['product_tags']);
+
+                // Check if at least one tag id is matching
+                if (empty($matching_tag_ids)) {
+                    continue;
+                }
+            }
+
+            // If we ended up here, item matches all criteria
+            $filtered[$item_key] = $item;
+        }
+
+        return $filtered;
     }
 
     /**
      * Get WooCommerce cart item count
      *
      * @access public
+     * @param array $cart_items
      * @return int
      */
-    public static function get_wc_cart_item_count()
+    public static function get_wc_cart_item_count($cart_items = null)
+    {
+        global $woocommerce;
+
+        // Get cart items from cart
+        if ($cart_items === null && is_object($woocommerce) && isset($woocommerce->cart) && is_object($woocommerce->cart) && isset($woocommerce->cart->cart_contents)) {
+            $cart_items = $woocommerce->cart->cart_contents;
+        }
+
+        // Count cart items
+        return count($cart_items);
+    }
+
+    /**
+     * Get WooCommerce cart item by cart item key
+     *
+     * @access public
+     * @param string $cart_item_key
+     * @return array|bool
+     */
+    public static function get_wc_cart_item_by_key($cart_item_key)
     {
         global $woocommerce;
 
         if (is_object($woocommerce) && isset($woocommerce->cart) && is_object($woocommerce->cart) && isset($woocommerce->cart->cart_contents)) {
-            return count($woocommerce->cart->cart_contents);
+            if (isset($woocommerce->cart->cart_contents[$cart_item_key])) {
+                return $woocommerce->cart->cart_contents[$cart_item_key];
+            }
         }
 
-        return 0;
+        return false;
     }
 
     /**
      * Get WooCommerce cart product ids
      *
      * @access public
+     * @param array $cart_items
      * @return array
      */
-    public static function get_wc_cart_product_ids()
+    public static function get_wc_cart_product_ids($cart_items = null)
     {
         global $woocommerce;
         $products = array();
 
+        // Get cart items
+        if ($cart_items === null && is_object($woocommerce) && isset($woocommerce->cart) && is_object($woocommerce->cart) && isset($woocommerce->cart->cart_contents)) {
+            $cart_items = $woocommerce->cart->cart_contents;
+        }
+
         // Iterate over items and pick product ids
-        if (is_object($woocommerce) && isset($woocommerce->cart) && is_object($woocommerce->cart) && isset($woocommerce->cart->cart_contents)) {
-            foreach ($woocommerce->cart->cart_contents as $item) {
+        if (is_array($cart_items) && !empty($cart_items)) {
+            foreach ($cart_items as $cart_item) {
 
                 // Reference product
-                $product = $item['data'];
+                $product = $cart_item['data'];
 
                 // Get product id
                 $product_id = $product->is_type('variation') ? RightPress_WC_Legacy::product_variation_get_parent_id($product) : RightPress_WC_Legacy::product_get_id($product);
@@ -1803,29 +2504,37 @@ final class RightPress_Helper_9
             }
         }
 
-        return $product;
+        // Return list of products
+        return $products;
     }
 
     /**
      * Get WooCommerce cart product variation ids
      *
      * @access public
+     * @param array $cart_items
      * @return array
      */
-    public static function get_wc_cart_product_variation_ids()
+    public static function get_wc_cart_product_variation_ids($cart_items = null)
     {
         global $woocommerce;
         $product_variations = array();
 
-        // Iterate over items and pick product variation ids
-        if (is_object($woocommerce) && isset($woocommerce->cart) && is_object($woocommerce->cart) && isset($woocommerce->cart->cart_contents)) {
-            foreach ($woocommerce->cart->cart_contents as $item) {
-                if (!empty($item['variation_id']) && !in_array($item['variation_id'], $product_variations)) {
-                    $product_variations[] = $item['variation_id'];
+        // Get cart items
+        if ($cart_items === null && is_object($woocommerce) && isset($woocommerce->cart) && is_object($woocommerce->cart) && isset($woocommerce->cart->cart_contents)) {
+            $cart_items = $woocommerce->cart->cart_contents;
+        }
+
+        // Iterate over items and pick product ids
+        if (is_array($cart_items) && !empty($cart_items)) {
+            foreach ($cart_items as $cart_item) {
+                if (!empty($cart_item['variation_id']) && !in_array($cart_item['variation_id'], $product_variations)) {
+                    $product_variations[] = $cart_item['variation_id'];
                 }
             }
         }
 
+        // Return list of variations
         return $product_variations;
     }
 
@@ -1833,12 +2542,13 @@ final class RightPress_Helper_9
      * Get WooCommerce cart product category ids
      *
      * @access public
+     * @param array $cart_items
      * @return array
      */
-    public static function get_wc_cart_product_category_ids()
+    public static function get_wc_cart_product_category_ids($cart_items = null)
     {
         // Get cart product ids
-        $product_ids = RightPress_Helper::get_wc_cart_product_ids();
+        $product_ids = RightPress_Helper::get_wc_cart_product_ids($cart_items);
 
         // Get product category ids from product ids
         return RightPress_Helper::get_wc_product_category_ids_from_product_ids($product_ids);
@@ -1848,40 +2558,45 @@ final class RightPress_Helper_9
      * Get WooCommerce cart product attribute ids
      *
      * @access public
+     * @param array $cart_items
      * @return array
      */
-    public static function get_wc_cart_product_attribute_ids()
+    public static function get_wc_cart_product_attribute_ids($cart_items = null)
     {
         global $woocommerce;
         $attributes = array();
 
+        // Get cart items
+        if ($cart_items === null && is_object($woocommerce) && isset($woocommerce->cart) && is_object($woocommerce->cart) && isset($woocommerce->cart->cart_contents)) {
+            $cart_items = $woocommerce->cart->cart_contents;
+        }
+
         // Iterate over cart items
-        if (is_object($woocommerce) && isset($woocommerce->cart) && is_object($woocommerce->cart) && isset($woocommerce->cart->cart_contents)) {
-            foreach($woocommerce->cart->cart_contents as $item) {
+        if (is_array($cart_items) && !empty($cart_items)) {
+            foreach ($cart_items as $cart_item) {
 
-                // Get selected variable product attributes
-                $selected = (!empty($item['variation'])) ? $item['variation'] : array();
-
-                // Get attribute ids
-                if ($attribute_ids = RightPress_Helper::get_wc_product_attribute_ids($item['product_id'], $selected)) {
-                    $attributes = array_unique(array_merge($attributes, $attribute_ids));
+                // Get attribute ids for current cart item
+                if ($attribute_ids = RightPress_Helper::get_wc_product_attribute_ids_from_cart_item($cart_item)) {
+                    $attributes = array_merge($attributes, $attribute_ids);
                 }
             }
         }
 
-        return $attributes;
+        // Return unique attributes
+        return array_unique($attributes);
     }
 
     /**
      * Get WooCommerce cart product tag ids
      *
      * @access public
+     * @param array $cart_items
      * @return array
      */
-    public static function get_wc_cart_product_tag_ids()
+    public static function get_wc_cart_product_tag_ids($cart_items = null)
     {
         // Get cart item product ids
-        $product_ids = RightPress_Helper::get_wc_cart_product_ids();
+        $product_ids = RightPress_Helper::get_wc_cart_product_ids($cart_items);
 
         // Get product tag ids from product ids
         return RightPress_Helper::get_wc_product_tag_ids_from_product_ids($product_ids);
@@ -1921,6 +2636,34 @@ final class RightPress_Helper_9
 
         // Return product ids
         return $product_ids;
+    }
+
+    /**
+     * Get WooCommerce order product variation ids
+     *
+     * @access public
+     * @param int $order_id
+     * @return array
+     */
+    public static function get_wc_order_product_variation_ids($order_id)
+    {
+        $variation_ids = array();
+
+        // Load order object
+        if ($order = RightPress_Helper::wc_get_order($order_id)) {
+
+            // Iterate over order items
+            foreach ($order->get_items() as $order_item) {
+
+                // Get variation id
+                if ($variation_id = RightPress_WC_Legacy::order_item_get_variation_id($order_item)) {
+                    $variation_ids[] = $variation_id;
+                }
+            }
+        }
+
+        // Return variation ids
+        return array_unique($variation_ids);
     }
 
     /**
@@ -1987,13 +2730,13 @@ final class RightPress_Helper_9
 
                 // Get attribute ids
                 if ($current_ids = RightPress_Helper::get_wc_product_attribute_ids($product_id, $selected)) {
-                    $attribute_ids = array_unique(array_merge($attribute_ids, $current_ids));
+                    $attribute_ids = array_merge($attribute_ids, $current_ids);
                 }
             }
         }
 
         // Return attribute ids
-        return $attribute_ids;
+        return array_unique($attribute_ids);
     }
 
     /**
@@ -2057,11 +2800,11 @@ final class RightPress_Helper_9
 
             // Get tag ids
             if ($current_ids = RightPress_Helper::get_wc_product_tag_ids($product_id)) {
-                $tag_ids = array_unique(array_merge($tag_ids, $current_ids));
+                $tag_ids = array_merge($tag_ids, $current_ids);
             }
         }
 
-        return $tag_ids;
+        return array_unique($tag_ids);
     }
 
     /**
@@ -2069,36 +2812,59 @@ final class RightPress_Helper_9
      *
      * Uses current user if user id is not passed in
      *
+     * If $combine is set to TRUE, searches for orders by email even when
+     * user id is known (used mostly for conditional logic)
+     *
      * @access public
      * @param int $user_id
+     * @param string $billing_email
+     * @param bool $combine
      * @return mixed
      */
-    public static function get_wc_last_user_paid_order_id($user_id = null)
+    public static function get_wc_last_user_paid_order_id($user_id = null, $billing_email = null, $combine = false)
     {
-        // User id not passed in
-        if (!$user_id) {
-
-            // User is logged in
-            if (is_user_logged_in()) {
-                $user_id = get_current_user_id();
-            }
-            // User is not logger in - unable to retrieve user orders
-            else {
-                return false;
-            }
-        }
+        $order_ids = array();
 
         // Build query
         $config = array(
             'numberposts'   => 1,
-            'meta_key'      => '_customer_user',
-            'meta_value'    => $user_id,
             'post_type'     => 'shop_order',
             'fields'        => 'ids',
         );
 
+        // Get user id
+        if ($user_id === null && is_user_logged_in()) {
+            $user_id = get_current_user_id();
+        }
+
+        // No way to determine customer
+        if ($user_id === null && $billing_email === null) {
+            return false;
+        }
+
+        // Maybe set OR relation
+        if ($user_id !== null && $billing_email !== null && $combine) {
+            $config['meta_query']['relation'] = 'OR';
+        }
+
+        // User id query
+        if ($user_id !== null) {
+            $config['meta_query'][] = array(
+                'key'   => '_customer_user',
+                'value' => $user_id,
+            );
+        }
+
+        // Billing email query
+        if (($user_id === null || $combine) && $billing_email !== null) {
+            $config['meta_query'][] = array(
+                'key'   => '_billing_email',
+                'value' => $billing_email,
+            );
+        }
+
         // Get paid statuses
-        $paid_statuses = apply_filters('woocommerce_order_is_paid_statuses', array('processing', 'completed'));
+        $paid_statuses = RightPress_Helper::get_wc_order_is_paid_statuses();
 
         // Only load orders that are marked processing or completed (i.e. paid)
         if (RightPress_Helper::wc_version_gte('2.2')) {
@@ -2184,8 +2950,575 @@ final class RightPress_Helper_9
         return array('' => '') + $options;
     }
 
+    /**
+     * Get WooCommerce tax class list
+     *
+     * @access public
+     * @param array $prepend
+     * @param array $append
+     * @return array
+     */
+    public static function get_wc_tax_class_list($prepend = array(), $append = array())
+    {
+        $tax_classes = array();
 
+        // Check if tax calculation is enabled on this store
+        if (wc_tax_enabled()) {
 
+            // Add Standard class
+            $tax_classes['standard'] = __('Standard Rate', 'woocommerce');
+
+            // Iterate over tax class names
+            foreach (WC_Tax::get_tax_classes() as $tax_class_name) {
+
+                // Add tax class to list
+                $tax_classes[sanitize_title($tax_class_name)] = esc_html($tax_class_name);
+            }
+        }
+
+        // Add custom tax classes and return
+        return array_merge($prepend, $tax_classes, $append);
+    }
+
+    /**
+     * Get hour list in one day (from 00:00 to 23:00)
+     *
+     * @access public
+     * @return array
+     */
+    public static function get_hour_list()
+    {
+        $list = array();
+
+        $format = wc_time_format();
+        $dt = new DateTime;
+
+        for ($i = 0; $i < 24; $i++) {
+            $dt->setTime($i, 0, 0);
+            $list[$i] = $dt->format($format);
+        }
+
+        return $list;
+    }
+
+    /**
+     * Merge arrays recursively combining child arrays that have numeric keys (array_merge_recursive does not support this)
+     *
+     * @access public
+     * @param array $all_vars
+     * @param array $var
+     * @return array
+     */
+    public static function array_merge_recursive_for_indexed_lists($all_vars, $var)
+    {
+        foreach ($var as $key => $value) {
+
+            // Key does not exist in main array yet
+            if (!isset($all_vars[$key])) {
+                $all_vars[$key] = $value;
+            }
+            // Value is array
+            else if (is_array($value)) {
+                $all_vars[$key] = RightPress_Helper::array_merge_recursive_for_indexed_lists($all_vars[$key], $value);
+            }
+            // Finite numerically indexed list of values
+            else if (is_int($key)) {
+                $all_vars[] = $value;
+            }
+        }
+
+        return $all_vars;
+    }
+
+    /**
+     * Check if array has more than one dimension
+     *
+     * @access public
+     * @param array $array
+     * @return bool
+     */
+    public static function array_is_multidimensional($array)
+    {
+        return count($array) !== count($array, COUNT_RECURSIVE);
+    }
+
+    /**
+     * Stringify array keys
+     *
+     * @access public
+     * @param array $array
+     * @return array
+     */
+    public static function stringify_array_keys($array)
+    {
+        $result = new stdClass();
+
+        foreach ($array as $key => $value) {
+            $string_key = (string) $key;
+            $result->$string_key = $value;
+        }
+
+        return (array) $result;
+    }
+
+    /**
+     * Get weekdays
+     *
+     * Numeric indexes - 0 stands for Sunday
+     * Sorted by "Week starts on" setting
+     *
+     * @access public
+     * @param bool $localize
+     * @return array
+     */
+    public static function get_weekdays($localize = true)
+    {
+        // Get localized names
+        if ($localize) {
+
+            global $wp_locale;
+
+            $weekdays = array();
+
+            for ($day_index = 0; $day_index <= 6; $day_index++) {
+                $weekdays[$day_index] = $wp_locale->get_weekday($day_index);
+            }
+        }
+        // Get English names
+        else {
+            $weekdays = array('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday');
+        }
+
+        // Get weekday sort order
+        $sort_list = array_keys($weekdays);
+
+        if ($first_day = RightPress_Helper::get_start_of_week()) {
+            $sort_list = array_merge(array_slice($sort_list, $first_day), array_slice($sort_list, 0, $first_day));
+        }
+
+        // Return reordered weekdays
+        return array_replace(array_flip($sort_list), $weekdays);
+    }
+
+    /**
+     * Get start of week
+     *
+     * Represents PHP date('w') where 0 is Sunday and 6 is Saturday
+     *
+     * @access public
+     * @return int
+     */
+    public static function get_start_of_week()
+    {
+        return intval(get_option('start_of_week', 0));
+    }
+
+    /**
+     * Get literal start of week
+     *
+     * Returns "sunday" to "saturday"
+     *
+     * @access public
+     * @return string
+     */
+    public static function get_literal_start_of_week()
+    {
+        $weekdays = array(
+            0 => 'sunday',
+            1 => 'monday',
+            2 => 'tuesday',
+            3 => 'wednesday',
+            4 => 'thursday',
+            5 => 'friday',
+            6 => 'saturday',
+        );
+
+        $start_of_week = RightPress_Helper::get_start_of_week();
+
+        return $weekdays[$start_of_week];
+    }
+
+    /**
+     * Get WooCommerce order ids
+     *
+     * Optional parameters:
+     *   date           object          Date object
+     *   customer_id    int             Customer id
+     *   billing_email  int             Billing email
+     *   status         string|array    Order status(es)
+     *
+     * @access public
+     * @param array $params
+     * @return array
+     */
+    public static function get_wc_order_ids($params = array())
+    {
+        // Start building query
+        $config = array(
+            'numberposts'   => -1,
+            'post_type'     => 'shop_order',
+            'fields'        => 'ids',
+        );
+
+        // Date
+        if (!empty($params['date']) && is_object($params['date'])) {
+            $config['date_query'] = array(
+                'after' => array(
+                    'year'  => $params['date']->format('Y'),
+                    'month' => $params['date']->format('m'),
+                    'day'   => $params['date']->format('d'),
+                ),
+                'inclusive' => true,
+            );
+        }
+
+        // Customer id
+        if (!empty($params['customer_id'])) {
+            $config['meta_query'][] = array(
+                'key'   => '_customer_user',
+                'value' => $params['customer_id']
+            );
+        }
+
+        // Billing email
+        if (!empty($params['billing_email'])) {
+            $config['meta_query'][] = array(
+                'key'   => '_billing_email',
+                'value' => $params['billing_email']
+            );
+        }
+
+        // Order statuses
+        if (!empty($params['status'])) {
+            $config['post_status'] = $params['status'];
+        }
+
+        // Get order ids
+        // WC31: this part needs to be updated with the next WC release: https://github.com/woocommerce/woocommerce/issues/12961, https://github.com/woocommerce/woocommerce/issues/12677
+        $order_ids = get_posts($config);
+
+        // Return order ids or empty array on failure
+        return ($order_ids && !is_wp_error($order_ids) && is_array($order_ids)) ? $order_ids : array();
+    }
+
+    /**
+     * Get WooCommerce paid order statuses
+     *
+     * @access public
+     * @param bool $include_prefix
+     * @return array
+     */
+    public static function get_wc_order_is_paid_statuses($include_prefix = false)
+    {
+        // Get statuses
+        if (RightPress_Helper::wc_version_gte('3.0')) {
+            $statuses = wc_get_is_paid_statuses();
+        }
+        else {
+            $statuses = apply_filters('woocommerce_order_is_paid_statuses', array('processing', 'completed'));
+        }
+
+        // Prepend prefix if needed and return
+        return $include_prefix ? preg_filter('/^/', 'wc-', $statuses) : $statuses;
+    }
+
+    /**
+     * Get min float value
+     *
+     * @access public
+     * @return float
+     */
+    public static function get_min_float_value()
+    {
+        $test_value = (float) 1;
+
+        for ($i = 0; $i < 50; $i++) {
+
+            // Get current value
+            $current_value = (float) ('0.' . str_repeat('0', $i) . '1');
+
+            // Check current value
+            if ((float) (string) ($current_value + 1) > 1) {
+                $value = $current_value;
+            }
+            else {
+                break;
+            }
+        }
+
+        return $value;
+    }
+
+    /**
+     * Get WooCommerce product quantity step
+     *
+     * @access public
+     * @param object $product
+     * @return int|float
+     */
+    public static function get_wc_product_quantity_step($product)
+    {
+        return apply_filters('woocommerce_quantity_input_step', 1, $product);
+    }
+
+    /**
+     * Check if WooCommerce product uses decimal quantities
+     *
+     * @access public
+     * @param object $product
+     * @param float|int $step
+     * @return bool
+     */
+    public static function wc_product_uses_decimal_quantities($product, $step = null)
+    {
+        if ($step === null) {
+            $step = RightPress_Helper::get_wc_product_quantity_step($product);
+        }
+
+        return floor($step) != $step;
+    }
+
+    /**
+     * Get WooCommerce product attribute ids from cart item
+     *
+     * @access public
+     * @param array $cart_item
+     * @return array
+     */
+    public static function get_wc_product_attribute_ids_from_cart_item($cart_item)
+    {
+        // Get selected variable product attributes
+        $selected = (!empty($cart_item['variation'])) ? $cart_item['variation'] : array();
+
+        // Get product attribute ids
+        return RightPress_Helper::get_wc_product_attribute_ids($cart_item['product_id'], $selected);
+    }
+
+    /**
+     * Encode ajax response data to json
+     *
+     * Used for multiselect options
+     *
+     * @access public
+     * @param mixed $data
+     * @return string
+     */
+    public static function json_encode_multiselect_options($data)
+    {
+        if (RightPress_Helper::php_version_gte('5.4')) {
+            return json_encode($data, JSON_UNESCAPED_UNICODE);
+        }
+        else {
+            return json_encode($data);
+        }
+    }
+
+    /**
+     * Extract WooCommerce variable product attributes from array
+     * that may contain other data
+     *
+     * @access public
+     * @param array $data
+     * @return array
+     */
+    public static function extract_wc_product_attributes_from_array($data)
+    {
+        $attributes = array();
+
+        foreach ($data as $key => $value) {
+            if (RightPress_Helper::string_contains_phrase($key, 'attribute_pa_')) {
+                $attributes[str_replace('attribute_', '', $key)] = $value;
+            }
+        }
+
+        return $attributes;
+    }
+
+    /**
+     * Attempt to get WooCommerce product variation id from a set of product attributes
+     *
+     * @access public
+     * @param mixed $product
+     * @param array $attributes
+     * @return int|null|false
+     */
+    public static function get_wc_variation_id_from_attributes($product, $attributes)
+    {
+        // Load product object
+        if (!is_a($product, 'WC_Product')) {
+            $product = wc_get_product($product);
+        }
+
+        // Product unknown
+        if (!is_a($product, 'WC_Product')) {
+            return false;
+        }
+
+        // Product is not variable
+        if (RightPress_WC_Legacy::product_get_type($product) !== 'variable') {
+            return null;
+        }
+
+        // Prefix attributes
+        $prefixed_attributes = array();
+
+        foreach ($attributes as $key => $value) {
+            $prefixed_attributes['attribute_' . $key] = $value;
+        }
+
+        // Find matching variation
+        if (RightPress_Helper::wc_version_gte('3.0')) {
+            $data_store = WC_Data_Store::load('product');
+            $variation_id = $data_store->find_matching_product_variation($product, $prefixed_attributes);
+        }
+        else {
+            $variation_id = $product->get_matching_variation($prefixed_attributes);
+        }
+
+        return $variation_id ? (int) $variation_id : null;
+    }
+
+    /**
+     * Inject or enqueue stylesheet depending on wether or not it's too late
+     * to print them in the head section
+     *
+     * @access public
+     * @param string $handle
+     * @param string $url
+     * @param string $version
+     * @return void
+     */
+    public static function enqueue_or_inject_stylesheet($handle, $url, $version)
+    {
+        // Enqueue in a regular fashion
+        if (!did_action('wp_print_styles')) {
+            wp_enqueue_style($handle, $url, array(), $version);
+        }
+        // Inject via Javascript
+        else {
+            RightPress_Helper::inject_stylesheet($url, $version);
+        }
+    }
+
+    /**
+     * Inject stylesheet into head section from within body
+     *
+     * @access public
+     * @param string $url
+     * @param string $version
+     * @return void
+     */
+    public static function inject_stylesheet($url, $version = null)
+    {
+        // Append version
+        if ($version !== null) {
+            $url .= '?ver=' . $version;
+        }
+
+        $script = "jQuery('<link>').appendTo('head').attr({type: 'text/css', rel: 'stylesheet'}).attr('href', '{$url}');";
+        echo '<script type="text/javascript" style="display: none;">' . $script . '</script>';
+    }
+
+    /**
+     * Get product page Ajax request data
+     *
+     * Used in places where we load our own data via Ajax on product pages
+     *
+     * Throws exceptions on error
+     *
+     * @access public
+     * @param array $custom_keys
+     * @return array
+     */
+    public static function get_product_page_ajax_request_data($custom_keys = array())
+    {
+        $data = array();
+
+        // Check if any data was posted
+        if (empty($_POST['data'])) {
+            throw new Exception('No data received.');
+        }
+
+        // Parse data
+        parse_str(urldecode($_POST['data']), $parsed);
+
+        // Get quantity
+        $data['quantity'] = !empty($parsed['quantity']) ? (int) $parsed['quantity'] : 1;
+
+        // Get product id
+        foreach (array('product_id', 'add-to-cart', 'rightpress_reference_product_id') as $key) {
+            if (isset($parsed[$key]) && is_numeric($parsed[$key])) {
+                $data['product_id'] = (int) $parsed[$key];
+                break;
+            }
+        }
+
+        // Check if product id is defined
+        if (empty($data['product_id'])) {
+            throw new Exception('Product is not defined.');
+        }
+
+        // Variation id is set
+        if (isset($parsed['variation_id']) && is_numeric($parsed['variation_id'])) {
+            $data['variation_id'] = (int) $parsed['variation_id'];
+        }
+        // Attempt to get variation id from attributes
+        else {
+            $attributes = RightPress_Helper::extract_wc_product_attributes_from_array($parsed);
+            $data['variation_id'] = RightPress_Helper::get_wc_variation_id_from_attributes($data['product_id'], $attributes);
+        }
+
+        // Load variation if it's variable product
+        if ($variation = RightPress_Helper::wc_get_product($data['variation_id'])) {
+
+            // Iterate over variation attributes
+            foreach ($variation->get_attributes() as $key => $value) {
+
+                // Prepend key
+                $key = 'attribute_' . $key;
+
+                // Get value passed with this request and set to data array
+                if (isset($parsed[$key])) {
+                    $data['variation_attributes'][$key] = $parsed[$key];
+                }
+            }
+        }
+        else {
+            $data['variation_attributes'] = array();
+        }
+
+        // Extract custom keys
+        foreach ($custom_keys as $custom_key) {
+            $data[$custom_key] = isset($parsed[$custom_key]) ? $parsed[$custom_key] : null;
+        }
+
+        // Return request data
+        return $data;
+    }
+
+    /**
+     * Enqueue jQuery plugins
+     *
+     * @access public
+     * @param string $handles
+     * @return void
+     */
+    public static function enqueue_jquery_plugins($handles)
+    {
+        global $rightpress_helper_version;
+
+        // Iterate over handles
+        foreach ($handles as $handle) {
+
+            // Enqueue script file
+            wp_enqueue_script($handle, plugins_url('', __FILE__) . '/jquery-plugins/' . $handle . '/' . $handle . '.js', array('jquery'), $rightpress_helper_version);
+
+            // Enqueue optional styles file
+            if (file_exists(plugin_dir_path(__FILE__) . 'jquery-plugins/' . $handle . '/' . $handle . '.css')) {
+                wp_enqueue_style($handle, plugins_url('', __FILE__) . '/jquery-plugins/' . $handle . '/' . $handle . '.css', array(), $rightpress_helper_version);
+            }
+        }
+    }
 
 
 

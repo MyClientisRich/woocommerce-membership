@@ -4,14 +4,19 @@
  * Plugin Name: WooCommerce Membership
  * Plugin URI: http://www.rightpress.net/woocommerce-membership
  * Description: Sell online memberships with WooCommerce and create members-only areas of your website
- * Version: 2.2.2
  * Author: RightPress
  * Author URI: http://www.rightpress.net
- * Requires at least: 3.6
- * Tested up to: 4.7
  *
  * Text Domain: woocommerce-membership
  * Domain Path: /languages
+ *
+ * Version: 2.2.3
+ *
+ * Requires at least: 3.6
+ * Tested up to: 4.8
+ *
+ * WC requires at least: 2.3
+ * WC tested up to: 3.2
  *
  * @package WooCommerce_Membership
  * @category Core
@@ -26,7 +31,7 @@ if (!defined('ABSPATH')) {
 // Define Constants
 define('RPWCM_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('RPWCM_PLUGIN_URL', plugins_url(basename(plugin_dir_path(__FILE__)), basename(__FILE__)));
-define('RPWCM_VERSION', '2.2.2');
+define('RPWCM_VERSION', '2.2.3');
 define('RPWCM_OPTIONS_VERSION', '1');
 define('RPWCM_SUPPORT_PHP', '5.3');
 define('RPWCM_SUPPORT_WP', '3.6');
@@ -85,9 +90,9 @@ class WooCommerce_Membership
     public function on_plugins_loaded()
     {
         // Load helper class
-        include_once RPWCM_PLUGIN_PATH . 'includes/classes/libraries/rightpress-helper.class.php';
-        include_once RPWCM_PLUGIN_PATH . 'includes/classes/libraries/rightpress-wc-meta.class.php';
-        include_once RPWCM_PLUGIN_PATH . 'includes/classes/libraries/rightpress-wc-legacy.class.php';
+        require_once RPWCM_PLUGIN_PATH . 'rightpress/rightpress-helper.class.php';
+        require_once RPWCM_PLUGIN_PATH . 'rightpress/rightpress-wc-meta.class.php';
+        require_once RPWCM_PLUGIN_PATH . 'rightpress/rightpress-wc-legacy.class.php';
 
         // Additional Plugins page links
         add_filter('plugin_action_links_' . plugin_basename(__FILE__), array($this, 'plugins_page_links'));
@@ -100,17 +105,17 @@ class WooCommerce_Membership
         // Load includes
         foreach (glob(RPWCM_PLUGIN_PATH . 'includes/*.inc.php') as $filename)
         {
-            include $filename;
+            require_once $filename;
         }
 
         // Load classes
         foreach (glob(RPWCM_PLUGIN_PATH . 'includes/classes/*.class.php') as $filename)
         {
-            include $filename;
+            require_once $filename;
         }
 
         // Initialize automatic updates
-        require_once(plugin_dir_path(__FILE__) . 'includes/classes/libraries/rightpress-updates.class.php');
+        require_once(plugin_dir_path(__FILE__) . 'rightpress/rightpress-updates.class.php');
         RightPress_Updates_8746370::init(__FILE__, RPWCM_VERSION);
 
         // Initialize plugin configuration

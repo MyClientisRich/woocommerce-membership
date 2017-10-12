@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
  *
  * WARNING: Make sure to update version number here as well as in the main class name
  */
-$version = '9';
+$version = '16';
 
 global $rightpress_wc_legacy_version;
 
@@ -55,9 +55,9 @@ final class RightPress_WC_Legacy
  * @class RightPress_WC_Legacy
  * @author RightPress
  */
-if (!class_exists('RightPress_WC_Legacy_9')) {
+if (!class_exists('RightPress_WC_Legacy_16')) {
 
-class RightPress_WC_Legacy_9
+class RightPress_WC_Legacy_16
 {
 
     /**
@@ -954,11 +954,12 @@ class RightPress_WC_Legacy_9
      *
      * @access public
      * @param object $product
+     * @param string $context
      * @return float
      */
-    public static function product_get_price($product)
+    public static function product_get_price($product, $context = 'view')
     {
-        return RightPress_Helper::wc_version_gte('3.0') ? $product->get_price() : $product->price;
+        return RightPress_Helper::wc_version_gte('3.0') ? $product->get_price($context) : $product->price;
     }
 
     /**
@@ -967,11 +968,12 @@ class RightPress_WC_Legacy_9
      *
      * @access public
      * @param object $product
+     * @param string $context
      * @return float
      */
-    public static function product_get_regular_price($product)
+    public static function product_get_regular_price($product, $context = 'view')
     {
-        return RightPress_Helper::wc_version_gte('3.0') ? $product->get_regular_price() : $product->regular_price;
+        return RightPress_Helper::wc_version_gte('3.0') ? $product->get_regular_price($context) : $product->regular_price;
     }
 
     /**
@@ -980,11 +982,12 @@ class RightPress_WC_Legacy_9
      *
      * @access public
      * @param object $product
+     * @param string $context
      * @return float
      */
-    public static function product_get_sale_price($product)
+    public static function product_get_sale_price($product, $context = 'view')
     {
-        return RightPress_Helper::wc_version_gte('3.0') ? $product->get_sale_price() : $product->sale_price;
+        return RightPress_Helper::wc_version_gte('3.0') ? $product->get_sale_price($context) : $product->sale_price;
     }
 
     /**
@@ -1015,6 +1018,20 @@ class RightPress_WC_Legacy_9
     public static function product_get_price_excluding_tax($product, $quantity = 1, $price = '')
     {
         return RightPress_Helper::wc_version_gte('3.0') ? wc_get_price_excluding_tax($product, array('qty' => $quantity, 'price' => $price)) : $product->get_price_excluding_tax($quantity, $price);
+    }
+
+    /**
+     * Get product display price
+     *
+     * @access public
+     * @param object $product
+     * @param float $price
+     * @param int $quantity
+     * @return string
+     */
+    public static function product_get_display_price($product, $price = '', $quantity = 1)
+    {
+        return RightPress_Helper::wc_version_gte('3.0') ? wc_get_price_to_display($product, array('qty' => $quantity, 'price' => $price)) : $product->get_display_price($price, $quantity);
     }
 
     /**
@@ -1387,7 +1404,7 @@ class RightPress_WC_Legacy_9
         foreach ($meta as $meta_id => $meta_value) {
 
             // Something is wrong, bail
-            if (!is_object($meta_value) || !property_exists($meta_value, 'value')) {
+            if (!is_a($meta_value, 'WC_Meta_Data')) {
                 return $meta;
             }
 
@@ -1437,6 +1454,18 @@ class RightPress_WC_Legacy_9
         else {
             $order->display_item_downloads($item);
         }
+    }
+
+    /**
+     * Get coupon code
+     *
+     * @access public
+     * @param object $coupon
+     * @return string
+     */
+    public static function coupon_get_code($coupon)
+    {
+        return RightPress_Helper::wc_version_gte('3.0') ? $coupon->get_code() : $coupon->code;
     }
 
 
